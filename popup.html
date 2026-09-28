@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Doceru Ebook Extractor</title>
+  <style>
+    @font-face { font-family: 'Switzer'; font-weight: 400; src: url('fonts/switzer-400.woff2') format('woff2'); }
+    @font-face { font-family: 'Switzer'; font-weight: 500; src: url('fonts/switzer-500.woff2') format('woff2'); }
+    @font-face { font-family: 'Switzer'; font-weight: 600; src: url('fonts/switzer-600.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-weight: 400; src: url('fonts/jetbrains-mono-400.woff2') format('woff2'); }
+    @font-face { font-family: 'JetBrains Mono'; font-weight: 500; src: url('fonts/jetbrains-mono-500.woff2') format('woff2'); }
+
+    :root {
+      --paper: #fafafc;
+      --card: #ffffff;
+      --surface: #efeff3;
+      --line: #d7d7dd;
+      --muted: #777781;
+      --label: #62626d;
+      --text: #0a0a0c;
+      --inverse: #fafafc;
+      --button: #0a0a0c;
+      --button-hover: #1c1c24;
+      --red: #e5261f;
+      --red-hover: #f02b24;
+      --mark-bg: #0a0a0c;
+      --mark-fg: #fafafc;
+      --sans: 'Switzer', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --radius: 4px;
+      color-scheme: light dark;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #0a0a0c;
+        --card: #101016;
+        --surface: #16161d;
+        --line: rgba(255, 255, 255, 0.12);
+        --muted: #8d8d98;
+        --label: #b6b6bf;
+        --text: #f4f4f7;
+        --inverse: #0a0a0c;
+        --button: #fafafc;
+        --button-hover: #e4e4ea;
+        --mark-bg: #fafafc;
+        --mark-fg: #0a0a0c;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 20px;
+      background: var(--paper);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    [hidden] { display: none !important; }
+
+    .label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      color: var(--label);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .rule { width: 20px; height: 1px; background: var(--red); }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mark { width: 36px; height: 36px; flex: none; }
+    .mark-bg { fill: var(--mark-bg); }
+    .mark-fg { fill: none; stroke: var(--mark-fg); stroke-width: 11; }
+    .mark-base { fill: var(--mark-fg); }
+
+    .title {
+      margin: 0 0 4px;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .dot { color: var(--red); }
+
+    .panel {
+      padding: 14px;
+      margin-bottom: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--muted);
+    }
+
+    .panel[data-state="ok"] .status-dot { background: var(--text); }
+    .panel[data-state="error"] .status-dot { background: var(--red); }
+    .panel[data-state="error"] .message { color: var(--red); }
+
+    .message { margin: 8px 0 0; }
+
+    .file {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border: 1px solid var(--text);
+      border-radius: 2px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+    }
+
+    .file-title {
+      margin: 8px 0 6px;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .file-link {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      line-height: 1.5;
+      word-break: break-all;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+    .button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+    .button svg { width: 16px; height: 16px; flex: none; }
+
+    .button--ink { background: var(--button); color: var(--inverse); }
+    .button--ink:hover { background: var(--button-hover); }
+
+    .button--line { background: transparent; color: var(--text); border-color: var(--line); }
+    .button--line:hover { border-color: var(--text); }
+
+    .button--red { background: var(--red); color: #ffffff; }
+    .button--red:hover { background: var(--red-hover); }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .footer {
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9.5px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .button { transition: none; }
+      .button:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+      <rect class="mark-bg" width="100" height="100" rx="22"/>
+      <path class="mark-fg" d="M50 18V60M31 42L50 61L69 42"/>
+      <rect class="mark-base" x="26" y="72" width="38" height="10"/>
+      <rect x="68" y="72" width="10" height="10" fill="#e5261f"/>
+    </svg>
+    <div>
+      <h1 class="title">Ebook Extractor<span class="dot">.</span></h1>
+      <p class="label"><span class="rule"></span>PDF · EPUB · MOBI</p>
+    </div>
+  </header>
+
+  <section class="panel" id="panel" data-state="idle">
+    <p class="label"><span class="status-dot"></span>Status</p>
+    <p class="message" id="result">Resolva o CAPTCHA no Doceru e clique em extrair.</p>
+    <div class="file" id="file" hidden>
+      <span class="badge" id="file-format"></span>
+      <p class="file-title" id="file-title"></p>
+      <p class="file-link" id="file-link"></p>
+    </div>
+  </section>
+
+  <button class="button button--ink" id="extract">
+    <span>Extrair link</span>
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4"/></svg>
+  </button>
+
+  <div class="actions" id="actions" hidden>
+    <button class="button button--line" id="copy">
+      <span>Copiar</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="5" width="9" height="9"/><path d="M11 2H2v9"/></svg>
+    </button>
+    <button class="button button--red" id="download">
+      <span>Baixar</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2v9M4 7l4 4 4-4M2 14h12"/></svg>
+    </button>
+  </div>
+
+  <footer class="label footer"><span>Doceru Ebook Extractor</span><span>v1.1</span></footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
